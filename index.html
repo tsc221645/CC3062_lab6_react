@@ -1,20 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Memory Game</title>
-        <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-        <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <title>Memory Game</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-image: url("images/wallpaper.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      text-align: center;
+      color: white;
+      height: 100vh;
+      width: 100vw;
+      padding: 20px;
+    }
 
-        <style>
+    #game {
+      display: grid;
+      grid-template-columns: repeat(4, 10vw);
+      gap: 10px;
+      justify-content: center;
+      margin: 20px auto;
+    }
 
+    .card {
+      width: 10vw;
+      height: 12vh;
+      perspective: 1000px;
+      cursor: pointer;
+    }
 
-        </style>
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+    }
 
-    </head>
-    <body>
-        <h1>Memory Game</h1>
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
 
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 10px;
+    }
 
-    </body>
+    .card-front {
+      transform: rotateY(180deg);
+    }
+
+    .card-back {
+      background: #444;
+    }
+
+    .moves {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .completed {
+      font-size: 1.2em;
+      margin-top: 15px;
+      color: green;
+    }
+
+    
+  </style>
+</head>
+<body>
+  <h1>Memory Game</h1>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const images = [
+      "images/alpha.jpg",
+      "images/meatlug.jpg",
+      "images/monstrousnightmare.jpg",
+      "images/stormfly.jpg",
+      "images/sippleback.jpg",
+      "images/terribleterror.jpg",
+      "images/toothless.jpg",
+      "images/whitenightfury.jpg"
+    ];
+
+    const shuffleArray = (arr) => arr.sort(() => Math.random() - 0.5);
+
+    function MemoryGame() {
+      const initialCards = shuffleArray([...images, ...images]).map((url, i) => ({
+        id: i,
+        url,
+        flipped: false,
+        matched: false
+      }));
+
+      const [cards, setCards] = useState(initialCards);
+      const [flipped, setFlipped] = useState([]);
+      const [moves, setMoves] = useState(0);
+      const [completed, setCompleted] = useState(false);
+
+      useEffect(() => {
+        if (flipped.length === 2) {
+          setMoves((m) => m + 1);
+          const [first, second] = flipped;
+          if (cards[first].url === cards[second].url) {
+            const updated = [...cards];
+            updated[first].matched = true;
+            updated[second].matched = true;
+            setCards(updated);
+            setFlipped([]);
+            if (updated.every(card => card.matched)) {
+              setTimeout(() => setCompleted(true), 300);
+            }
+          } else {
+            setTimeout(() => {
+              const updated = [...cards];
+              updated[first].flipped = false;
+              updated[second].flipped = false;
+              setCards(updated);
+              setFlipped([]);
+            }, 1000);
+          }
+        }
+      }, [flipped]);
+
+      const handleClick = (index) => {
+        if (flipped.length < 2 && !cards[index].flipped && !cards[index].matched) {
+          const updated = [...cards];
+          updated[index].flipped = true;
+          setCards(updated);
+          setFlipped([...flipped, index]);
+        }
+      };
+
+      return (
+        <div>
+          <div id="game">
+            {cards.map((card, index) => (
+              <div
+                key={card.id}
+                className={`card ${card.flipped ? "flipped" : ""}`}
+                onClick={() => handleClick(index)}
+              >
+                <div className="card-inner">
+                  <div className="card-front">
+                    <img src={card.url} alt="card" style={{ width: "100%", height: "100%", borderRadius: "10px" }} />
+                  </div>
+                  <div className="card-back" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="moves">Moves: {moves}</div>
+          {completed && <div className="completed">Congratulations, you completed the game!</div>}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<MemoryGame />);
+  </script>
+</body>
 </html>
