@@ -2,4 +2,6 @@
 
 ## Juego de Memoria
 
-Ana Laura tschen 221645
+### Sistemas y Tecnologías Web
+
+Ana Laura Tschen 221645
